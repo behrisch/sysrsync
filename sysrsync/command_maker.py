@@ -1,6 +1,7 @@
 """Generates the rsync command."""
 import os
 import os.path
+import shutil
 from typing import Iterable, List, Optional
 
 from sysrsync.exceptions import RemotesError
@@ -67,9 +68,13 @@ def get_rsync_command(source: str,
     if options is None:
         options = []
 
-    return ['rsync',
-            *options,
-            *rsh,
-            source,
-            destination,
-            *exclusions_options]
+    rsync_cmd = ['rsync',
+                 *options,
+                 *rsh,
+                 source,
+                 destination,
+                 *exclusions_options]
+    if os.name == 'nt' and not shutil.which(rsync_cmd[0]) and shutil.which('wsl'):
+        rsync_cmd = ['wsl'] + rsync_cmd
+
+    return rsync_cmd
